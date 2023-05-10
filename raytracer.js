@@ -61,16 +61,40 @@ function render() {
 function raytracing(ray, depth) {
 	let color = new THREE.Color(0,0,0);
 // ===YOUR CODE STARTS HERE===
-
-// ---YOUR CODE ENDS HERE---
-	return color;
+	let isect = rayIntersectScene(ray);
+	if (isect != null){
+		if ((isect.material.kr != null || isect.material.kt != null)){
+			if (depth < maxDepth){
+				if (isect.material.kr != NUll){
+					color.x += isect.material.kr;
+				}
+				if (isect.material.kt != NUll){
+					color.x += isect.material.kr;
+				}
+			}
+		}
+		else{
+			let x = isect.material.ka.r * ambientLight.r;
+			let y = isect.material.ka.g * ambientLight.g;
+			let z = isect.material.ka.b * ambientLight.b;
+			color = new THREE.Color(x,y,z);
+		}
+		return color;
+	}
+	else{
+		return backgroundColor;
+	}
 }
+// ---YOUR CODE ENDS HERE---
+
 
 /* Compute and return shading color given a ray and the intersection point structure. */
 function shading(ray, isect) {
 	let color = new THREE.Color(0,0,0);
 // ===YOUR CODE STARTS HERE===
-
+	for (let i = 0; i<lights.length; i++){
+		let ls = lights[i].getLight()
+	}
 // ---YOUR CODE ENDS HERE---
 	return color;
 }

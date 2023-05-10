@@ -48,6 +48,9 @@ class Plane {
 	}
 }
 
+	function p(t){
+
+	}
 /* Sphere shape
  * C: center of sphere (type THREE.Vector3)
  * r: radius
@@ -61,7 +64,35 @@ class Sphere {
 	}
 	intersect(ray, tmin, tmax) {
 // ===YOUR CODE STARTS HERE===
-
+	let cClone = this.C.clone();
+	let d = ray.d.clone();
+	let O = ray.o.clone();
+	let A = 1;
+	let OminusC = O.sub(cClone);
+	let B = OminusC.clone().multiplyScalar(2).dot(d);
+	let C = Math.pow(OminusC.clone().length(),2) - this.r2;
+	let delta = Math.pow(B,2)- (4*A*C);
+	if (delta <0){return null;}
+	else{
+		let t1 = ((-1*B) + Math.sqrt(delta))/(2*A);
+		let t2 = ((-1*B) - Math.sqrt(delta))/(2*A);
+		let tVal;
+		if (t1 >= tmin && t1 <= tmax && t2 >= tmin && t2 <= tmax) {
+			tVal = Math.min(t1, t2);
+		  } else if (t1 >= tmin && t1 <= tmax) {
+			tVal = t1;
+		  } else if (t2 >= tmin && t2 <= tmax) {
+			tVal = t2;
+		  } else {
+			return null;
+		  }
+		  let isect = new Intersection();
+		  isect.t = tVal;
+		  isect.position = O.clone().add(d.clone().multiplyScalar(tVal));
+		  isect.normal = isect.position.clone().sub(cClone);
+		  isect.material = this.material;
+		  return isect;
+	}
 // ---YOUR CODE ENDS HERE---
 		return null;
 	}
