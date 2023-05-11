@@ -48,9 +48,6 @@ class Plane {
 	}
 }
 
-	function p(t){
-
-	}
 /* Sphere shape
  * C: center of sphere (type THREE.Vector3)
  * r: radius
@@ -74,8 +71,8 @@ class Sphere {
 	let delta = Math.pow(B,2)- (4*A*C);
 	if (delta <0){return null;}
 	else{
-		let t1 = ((-1*B) + Math.sqrt(delta))/(2*A);
-		let t2 = ((-1*B) - Math.sqrt(delta))/(2*A);
+		let t1 = ((-1*B) + Math.sqrt(delta))/(2);
+		let t2 = ((-1*B) - Math.sqrt(delta))/(2);
 		let tVal;
 		if (t1 >= tmin && t1 <= tmax && t2 >= tmin && t2 <= tmax) {
 			tVal = Math.min(t1, t2);
@@ -88,8 +85,8 @@ class Sphere {
 		  }
 		  let isect = new Intersection();
 		  isect.t = tVal;
-		  isect.position = O.clone().add(d.clone().multiplyScalar(tVal));
-		  isect.normal = isect.position.clone().sub(cClone);
+		  isect.position = ray.pointAt(tVal);
+		  isect.normal = isect.position.clone().sub(cClone).normalize();
 		  isect.material = this.material;
 		  return isect;
 	}
@@ -114,11 +111,54 @@ class Triangle {
 		// such as the triangle normal etc.
 // ===YOUR CODE STARTS HERE===
 
+
 // ---YOUR CODE ENDS HERE---
 	} 
 
 	intersect(ray, tmin, tmax) {
 // ===YOUR CODE STARTS HERE===
+		let tNorm = this.P2.clone().sub(this.P0).cross(this.P2.clone().sub(this.P1)).normalize();
+		let d = ray.d.clone();
+		let o = ray.o.clone();
+		let matrixOne = new THREE.Matrix3();
+		matrixOne.set(d.x, this.P2.x-this.P0.x, this.P2.x-this.P1.x, 
+					  d.y, this.P2.y-this.P0.y, this.P2.y-this.P1.y,
+					  d.z, this.P2.z-this.P0.z, this.P2.z-this.P1.z);
+		let matrixTwo = new THREE.Matrix3();
+		matrixTwo.set(this.P2.x-o.x, this.P2.x-this.P0.x, this.P2.x-this.P1.x, 
+					  this.P2.y-o.y, this.P2.y-this.P0.y, this.P2.y-this.P1.y,
+					  this.P2.z-o.z, this.P2.z-this.P0.z, this.P2.z-this.P1.z);
+		let matrixThree = new THREE.Matrix3();
+		matrixThree.set(d.x, this.P2.x-this.P0.x, this.P2.x-o.x, 
+						d.y, this.P2.y-this.P0.y, this.P2.y-o.y,
+						d.z, this.P2.z-this.P0.z, this.P2.z-o.z);
+		let matrixFour = new THREE.Matrix3();
+		matrixFour.set(d.x, this.P2.x-o.x, this.P2.x-this.P1.x, 
+					  d.y, this.P2.y-o.y, this.P2.y-this.P1.y,
+					  d.z, this.P2.z-o.z, this.P2.z-this.P1.z);
+		if (matrixOne.clone().determinant() == 0){
+			return null;
+		}
+		else{
+			let t = matrixTwo.clone().determinant()/matrixOne.clone().determinant();
+			let alpha = matrixFour.clone().determinant()/matrixOne.clone().determinant();
+			let beta = matrixThree.clone().determinant()/matrixOne.clone().determinant();
+			if (t<tmin || t>tmax){
+				return null;
+			}
+			if (alpha >=0 && beta >= 0 && t >= 0 && alpha + beta <=1){
+				if (this.n0 != null && this.n1 != null && this.n2 != null){
+					tNorm = this.n0.clone().multiplyScalar(alpha).add(this.n1.clone().multiplyScalar(beta)).add(this.n2.clone().multiplyScalar(1-alpha-beta)).normalize();
+				}
+				let isect = new Intersection();
+				isect.t = t;
+				isect.material = this.material;
+				isect.normal = tNorm;
+				isect.position = ray.pointAt(t);
+				return isect;
+			}
+		}
+
 
 // ---YOUR CODE ENDS HERE---
 		return null;

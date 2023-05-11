@@ -65,19 +65,25 @@ function raytracing(ray, depth) {
 	if (isect != null){
 		if ((isect.material.kr != null || isect.material.kt != null)){
 			if (depth < maxDepth){
-				if (isect.material.kr != NUll){
-					color.x += isect.material.kr;
-				}
-				if (isect.material.kt != NUll){
-					color.x += isect.material.kr;
+				if (isect.material.kr != null){
+					let n = isect.normal;
+					let l = ray.d.clone().multiplyScalar(-1);
+					let reflectV = reflect(l, n);
+					let reflRay = new Ray(isect.position, reflectV);
+					color.add(isect.material.kr.clone().multiply(raytracing(reflRay, depth+1)));
+				} 
+				if (isect.material.kt != null){
+					let n = isect.normal;
+					let l = ray.d.clone();
+					let refractV = refract(l, n, isect.material.ior);
+					let refrRay = new Ray(isect.position, refractV);
+					color.add(isect.material.kt.clone().multiply(raytracing(refrRay, depth+1)));
 				}
 			}
 		}
 		else{
-			let x = isect.material.ka.r * ambientLight.r;
-			let y = isect.material.ka.g * ambientLight.g;
-			let z = isect.material.ka.b * ambientLight.b;
-			color = new THREE.Color(x,y,z);
+			color = isect.material.ka.clone().multiply(ambientLight);
+			color.add(shading(ray, isect));
 		}
 		return color;
 	}
@@ -93,7 +99,27 @@ function shading(ray, isect) {
 	let color = new THREE.Color(0,0,0);
 // ===YOUR CODE STARTS HERE===
 	for (let i = 0; i<lights.length; i++){
-		let ls = lights[i].getLight()
+		let ls = lights[i].getLight(isect.position);
+		let shadowRay = new Ray(isect.position, ls.direction);
+		let distToLight = ls.position.clone().sub(isect.position).length();
+		let shadow_isect = rayIntersectScene(shadowRay);
+
+		if (shadow_isect != null && shadow_isect.t <distToLight ){
+			continue;
+		}
+		let l = ls.direction.clone();
+		let n = isect.normal.normalize().clone();
+		let v = ray.d.clone().multiplyScalar(-1);
+		let r = reflect(l, n);
+		let material = isect.material;
+		if (material.kd != null){
+			let Id = ls.intensity.clone().multiply(isect.material.kd).multiplyScalar(Math.max(n.clone().dot(l), 0));
+			color.add(Id);
+		}
+		if (material.ks != null){
+		let Is = ls.intensity.clone().multiply(isect.material.ks).multiplyScalar(Math.pow(Math.max(r.clone().dot(v), 0), material.p));
+		color.add(Is);
+		}
 	}
 // ---YOUR CODE ENDS HERE---
 	return color;

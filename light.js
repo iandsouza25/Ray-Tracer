@@ -48,7 +48,25 @@ class SpotLight {
 	}
 	getLight(shadingPoint) {
 // ===YOUR CODE STARTS HERE===
-
+		let dirV = this.to.clone().sub(this.from).normalize();
+		let l = shadingPoint.clone().sub(this.from).normalize();
+		let ls = new LightSample();
+		let cutOffRad = (this.cutoff/2) * (Math.PI/180);
+		if (dirV.clone().dot(l) > Math.cos(cutOffRad)){
+			ls.position = this.from.clone();
+			ls.direction = l.clone().multiplyScalar(-1);
+			let fromPVLength2 = Math.pow(this.from.clone().sub(shadingPoint).length(),2);
+			ls.intensity = this.intensity.clone();
+			ls.intensity.multiplyScalar(1/fromPVLength2);
+			ls.intensity.multiplyScalar(Math.pow(dirV.clone().dot(l),this.exponent));
+			return ls;
+		}
+		else{
+			ls.position = this.from.clone();
+			ls.direction = l.clone().multiplyScalar(-1);
+			ls.intensity = new THREE.Color(0,0,0);
+			return ls;
+		}
 // ---YOUR CODE ENDS HERE---
 	}
 }
